@@ -46,13 +46,13 @@ const T=[{r:14,n:"夕張",c:"#d9f2d0",tc:"#2b1d12"},{r:20,n:"熱海",c:"#a8e6cf"
 const cv=document.getElementById("c"),ctx=cv.getContext("2d");
 const dpr=Math.min(window.devicePixelRatio||1,2);
 cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
-let balls,score,cur,nxt,x,cool,over,best=0,power,goalL,evt,msg,msgT,jam,shield=0,fx=[],lastTap={b:null,t:0},skipDrop=false,conn=null,peer=null,lock=0,pun=null,res="",opp=0,sentP=-1;const GOAL=300;
+let balls,score,cur,nxt,x,cool,over,best=0,power,goalL,evt,msg,msgT,jam,shield=0,fx=[],lastTap={b:null,t:0},skipDrop=false,conn=null,peer=null,lock=0,pun=null,res="",opp=0,sentP=-1,rdy=false,opRdy=false;const GOAL=300;
 try{best=+localStorage.getItem("sg_best")||0}catch(e){}
 const rnd=()=>Math.floor(Math.random()*4);
 const $=id=>document.getElementById(id);
 function ui(){if(conn&&conn.open&&sentP!==power){sentP=power;conn.send({t:"pw",p:power})}if(conn&&power>=GOAL&&!over){conn.send({t:"fin"});res="勝ち";over=true}$("opp").textContent=conn?"相手 国力 "+opp+"(先に "+GOAL+" で勝ち)":"";$("sc").textContent=score;$("bs").textContent=best;$("nx").textContent=T[nxt].n;$("goal").textContent="国力 "+power+"　目標: "+T[goalL].n+"を吸収で国力×2\n光る都市をダブルタップで日本に吸収"}
 const pick=()=>3+Math.floor(Math.random()*6);
-function reset(){balls=[];fx=[];lastTap={b:null,t:0};skipDrop=false;shield=0;lock=0;pun=null;res="";opp=0;sentP=-1;score=0;power=0;goalL=pick();evt=35;msg="";msgT=0;jam=0;cur=rnd();nxt=rnd();x=W/2;cool=0.3;over=false;ui()}
+function reset(){balls=[];fx=[];lastTap={b:null,t:0};skipDrop=false;shield=0;lock=0;pun=null;res="";opp=0;sentP=-1;rdy=false;opRdy=false;score=0;power=0;goalL=pick();evt=35;msg="";msgT=0;jam=0;cur=rnd();nxt=rnd();x=W/2;cool=0.3;over=false;ui()}
 function drop(){let dx=x;if(jam>0){jam--;const r=T[cur].r;dx=Math.max(r,Math.min(W-r,x+(Math.random()-.5)*120))}balls.push({x:dx,y:40,vx:0,vy:0,l:cur,age:0,t:0});cur=nxt;nxt=rnd();cool=0.6;ui()}
 function note(s){msg=s;msgT=3.5}
 function absorb(b){if(lock>0){note("工場停止中で吸収できない");return}const g=(b.l+1)*(b.l+1);let p=g;if(b.l===goalL){p=g*2;note("目標達成! "+T[goalL].n+"を吸収。国力×2");goalL=pick()}else note(T[b.l].n+"を日本に吸収");if(conn){if(b.l===7)p+=20;if(b.l===9)p+=30;if(conn.open)conn.send({t:"atk",l:b.l})}power+=p;fx.push({x:b.x,y:b.y,s:"+"+p,t:1.2});balls.splice(balls.indexOf(b),1);ui()}
@@ -68,13 +68,14 @@ const EV=[
 ];
 function shake(){for(const b of balls){b.vx+=(Math.random()-.5)*600;b.vy-=200}}
 function hit(l){
- if(l<6){pun={t:1.6,x:70+Math.random()*(W-140),y:130+Math.random()*(H-300)};note("パンチを食らった!")}
+ if(l<6){pun={t:1.6,x:70+Math.random()*(W-140),y:130+Math.random()*(H-300)};power=Math.max(0,power-2);note("パンチを食らった! 国力-2");ui()}
  else if(l===6){lock=10;note("工場停止! 10秒間 吸収できない")}
  else if(l===7){power=Math.max(0,power-20);note("商都に国力を奪われた! -20");ui()}
  else if(l===8){cur=4;nxt=4;note("開港! 大きな都市が続く");ui()}
  else{shake();power=Math.max(0,power-30);note("一極集中! 揺れと強奪 -30");ui()}
 }
-function recv(m){if(over)return;if(m.t==="atk")hit(m.l);else if(m.t==="pw"){opp=m.p;ui()}else if(m.t==="fin"){res="負け";over=true}else if(m.t==="over"){res="勝ち";over=true}}
+function go(){if(rdy&&opRdy)reset()}
+function recv(m){if(m.t==="rdy"){opRdy=true;go();return}if(over)return;if(m.t==="atk")hit(m.l);else if(m.t==="pw"){opp=m.p;ui()}else if(m.t==="fin"){res="負け";over=true}else if(m.t==="over"){res="勝ち";over=true}}
 function setup(k){conn=k;k.on("data",recv);k.on("close",()=>{if(!over){res="勝ち(相手が退出)";over=true}})}
 function rmTop(){if(!balls.length)return;let m=balls[0];for(const b of balls)if(b.y<m.y)m=b;balls.splice(balls.indexOf(m),1)}
 function fireEvent(){const h=!conn&&Math.random()<.55;const pool=EV.filter(e=>(e[1]==="妨害")===h);const e=pool[Math.floor(Math.random()*pool.length)];if(e[1]==="妨害"&&shield>0){shield--;note("アメリカの支援で"+e[0]+"の妨害を防いだ");return}e[3]();note(e[0]+"の"+e[1]+": "+e[2])}
@@ -132,11 +133,11 @@ function draw(){
   ctx.fillStyle="rgba(0,0,0,.6)";ctx.fillRect(0,0,W,H);
   ctx.fillStyle="#fff";ctx.textAlign="center";ctx.textBaseline="middle";
   ctx.font="bold 34px sans-serif";ctx.fillText(res||"ゲームオーバー",W/2,H/2-16);
-  ctx.font="18px sans-serif";ctx.fillText("国力 "+power+"  スコア "+score,W/2,H/2+20);ctx.fillText("タップでもう一度",W/2,H/2+48);
+  ctx.font="18px sans-serif";ctx.fillText("国力 "+power+"  スコア "+score,W/2,H/2+20);ctx.fillText(conn?(rdy?"相手の準備を待っています":"タップで準備OK(2人そろうと再開)"):"タップでもう一度",W/2,H/2+48);
  }
 }
 function px(e){const r=cv.getBoundingClientRect(),rr=T[cur].r;x=Math.max(rr,Math.min(W-rr,(e.clientX-r.left)/r.width*W))}
-cv.addEventListener("pointerdown",e=>{if(over){if(conn)location.reload();else reset();return}px(e);const h=hitM(e),n=performance.now();skipDrop=!!h;if(h){if(lastTap.b===h&&n-lastTap.t<350){absorb(h);lastTap.b=null}else lastTap={b:h,t:n}}});
+cv.addEventListener("pointerdown",e=>{if(over){if(conn&&conn.open){if(!rdy){rdy=true;conn.send({t:"rdy"});go()}}else if(conn)location.reload();else reset();return}px(e);const h=hitM(e),n=performance.now();skipDrop=!!h;if(h){if(lastTap.b===h&&n-lastTap.t<350){absorb(h);lastTap.b=null}else lastTap={b:h,t:n}}});
 cv.addEventListener("pointermove",px);
 cv.addEventListener("pointerup",e=>{if(over||cool>0||skipDrop)return;px(e);drop()});
 $("rs").addEventListener("click",reset);
@@ -146,7 +147,7 @@ let last=performance.now();
 function loop(n){
  const dt=Math.min((n-last)/1000,1/30);last=n;
  if(!over){
-  cool-=dt;evt-=dt;msgT-=dt;lock-=dt;if(evt<=0){evt=35+Math.random()*20;fireEvent()}for(const f of fx){f.t-=dt;f.y-=30*dt}fx=fx.filter(f=>f.t>0);if(pun){pun.t-=dt;if(pun.t<=0)pun=null}
+  cool-=dt;evt-=dt;msgT-=dt;lock-=dt;if(evt<=0){evt=35+Math.random()*20;if(!conn)fireEvent()}for(const f of fx){f.t-=dt;f.y-=30*dt}fx=fx.filter(f=>f.t>0);if(pun){pun.t-=dt;if(pun.t<=0)pun=null}
   for(let i=0;i<6;i++)step(dt/6);
   for(const b of balls){
    if(b.age>1&&b.y-T[b.l].r<LINE)b.t+=dt;else b.t=0;
