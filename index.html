@@ -43,13 +43,31 @@ body.vs #c{width:min(66vw,calc((100dvh - 190px)*0.6923))}
 #e2{white-space:pre-line;font-size:18px;line-height:1.7}
 #imgw{position:fixed;inset:0;z-index:6;background:rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#fff;text-align:center}
 #imgw[hidden]{display:none}
+#tut{position:fixed;inset:0;z-index:7;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px;text-align:center}
+#tut[hidden]{display:none}
+#tut button{font-size:17px;padding:10px 20px}
+#th{font-size:26px;font-weight:800}
+#td{letter-spacing:4px}
+#tb{white-space:pre-line;font-size:17px;line-height:1.7;text-align:left;max-width:min(92vw,420px)}
+#tc{display:flex;flex-wrap:wrap;gap:3px;justify-content:center;align-items:center;font-size:12px;font-weight:700;max-width:90vw}
+#tc[hidden]{display:none}
+#tc span{padding:2px 6px;border-radius:10px}
+#tt{font-size:15px;font-weight:700;letter-spacing:6px;opacity:.75;border-bottom:2px solid var(--fg);padding-bottom:4px}
+#title{position:fixed;inset:0;z-index:8;background:var(--bg);color:var(--fg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;cursor:pointer}
+#title[hidden]{display:none}
+#ttl{font-size:34px;font-weight:800;line-height:1.3}
+#tsub{font-size:16px;opacity:.8}
+#ttap{margin-top:30px;font-size:18px;font-weight:700;animation:bl 1.4s infinite}
+@keyframes bl{50%{opacity:.2}}
 #img{max-width:80vw;max-height:70vh}
 </style></head><body>
+<div id="title"><div style="font-size:64px">🗾</div><div id="ttl">日本の都市合体ゲーム</div><div id="tsub">日本を育てよう</div><div id="ttap">タップしてスタート</div></div>
 <div id="lobby"><b style="font-size:20px">日本の都市合体ゲーム</b>
 <button id="b1">ひとりで遊ぶ</button>
 <button id="b2">部屋をつくる(2人対戦)</button>
 <div><input id="cd" maxlength="4" placeholder="部屋コード" size="7"> <button id="b3">入る</button></div>
-<div id="st"></div></div>
+<button id="b4">あそびかた</button><div id="st"></div></div>
+<div id="tut" hidden><div id="tt">遊び方</div><div id="th"></div><div id="tc"></div><div id="tb"></div><div id="td"></div><div><button id="tp">戻る</button> <button id="tn">次へ</button></div><button id="tx">閉じる</button></div>
 <div id="end" hidden><div id="e1"></div><div id="e2"></div><button id="eb"></button><button id="es">写真で保存</button><button id="ex">タイトルへ</button><div id="et"></div></div>
 <div id="imgw" hidden><img id="img" alt=""><div>画像を長押しして保存してください(タップで閉じる)</div></div>
 <div id="hd">
@@ -72,16 +90,16 @@ const T=[{r:14,n:"夕張",c:"#d9f2d0",tc:"#2b1d12"},{r:20,n:"熱海",c:"#a8e6cf"
 const cv=document.getElementById("c"),ctx=cv.getContext("2d");
 const dpr=Math.min(window.devicePixelRatio||1,2);
 cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
-let balls,score,cur,nxt,x,cool,over,best=0,power,goalL,evt,msg,msgT,jam,shield=0,fx=[],lastTap={b:null,t:0},skipDrop=false,conn=null,peer=null,lock=0,pun=null,res="",opp=0,sentP=-1,rdy=false,opRdy=false,ob=[],bt=0,gone=false,pb=0,tl=180,pre=0,cdq=-1,shown=false,ab=[0,0,0,0,0,0,0,0,0,0];const GOAL=1000;const SU={r:39,n:"しゅうまい",c:"#f3dc9a",tc:"#5a3b12"};
+let balls,score,cur,nxt,x,cool,over,best=0,power,goalL,evt,msg,msgT,jam,shield=0,fx=[],lastTap={b:null,t:0},skipDrop=false,conn=null,peer=null,lock=0,pun=null,res="",opp=0,sentP=-1,rdy=false,opRdy=false,ob=[],bt=0,gone=false,pb=0,tl=60,pre=0,cdq=-1,rate=1,hype=false,fever=false,fvt=0,shown=false,ab=[0,0,0,0,0,0,0,0,0,0];const GOAL=1000;const SU={r:39,n:"しゅうまい",c:"#f3dc9a",tc:"#5a3b12"};
 try{best=+localStorage.getItem("sg_bp")||0}catch(e){}
 const rnd=()=>Math.floor(Math.random()*4);
 const $=id=>document.getElementById(id);
 function ui(){if(conn&&conn.open&&sentP!==power){sentP=power;conn.send({t:"pw",p:power})}if(conn&&power>=GOAL&&!over){conn.send({t:"fin"});res="勝ち";over=true}$("on").textContent=conn?"相手 国力 "+opp+"(先に "+GOAL+" で勝ち)":"";if(power>best){best=power;try{localStorage.setItem("sg_bp",best)}catch(e){}}$("pn").textContent="国力 "+power+(conn?" / "+GOAL:"");$("bar").hidden=!conn;$("pf").style.width=Math.min(100,power/GOAL*100)+"%";$("obar").hidden=!conn;$("of").style.width=Math.min(100,opp/GOAL*100)+"%";$("bs").textContent=best;$("nx").textContent=T[nxt].n;$("goal").textContent="光る都市をダブルタップで日本に吸収"}
 const pick=()=>3+Math.floor(Math.random()*6);
-function reset(){balls=[];fx=[];lastTap={b:null,t:0};skipDrop=false;shield=0;lock=0;pun=null;res="";opp=0;sentP=-1;rdy=false;opRdy=false;ob=[];bt=0;gone=false;pb=best;tl=180;pre=0;shown=false;ab=[0,0,0,0,0,0,0,0,0,0];$("end").hidden=true;bgv(.6);power=0;goalL=pick();evt=35;msg="";msgT=0;jam=0;cur=rnd();nxt=rnd();x=W/2;cool=0.3;over=false;ui()}
+function reset(){balls=[];fx=[];lastTap={b:null,t:0};skipDrop=false;shield=0;lock=0;pun=null;res="";opp=0;sentP=-1;rdy=false;opRdy=false;ob=[];bt=0;gone=false;pb=best;tl=60;fvt=0;pre=0;shown=false;ab=[0,0,0,0,0,0,0,0,0,0];$("end").hidden=true;bgv(.6);power=0;goalL=pick();evt=35;msg="";msgT=0;jam=0;cur=rnd();nxt=rnd();x=W/2;cool=0.3;over=false;ui()}
 function drop(){sfx("drop");let dx=x;if(jam>0){jam--;const r=T[cur].r;dx=r+Math.random()*(W-2*r)}balls.push({x:dx,y:40,vx:0,vy:0,l:cur,age:0,t:0});cur=nxt;nxt=rnd();cool=0.6;ui()}
 function note(s){msg=s;msgT=3.5}
-function absorb(b){if(lock>0){note("工場停止中で吸収できない");sfx("ng");return}const g=(b.l+1)*(b.l+1);let p=g;note(T[b.l].n+"を日本に吸収");if(conn){if(b.l===7)p+=20;if(b.l===9)p+=30;if(conn.open)conn.send({t:"atk",l:b.l})}ab[b.l]++;sfx("absorb",b.l);power+=p;fx.push({x:b.x,y:b.y,s:"+"+p,t:1.2});balls.splice(balls.indexOf(b),1);ui()}
+function absorb(b){if(lock>0){note("工場停止中で吸収できない");sfx("ng");return}const g=(b.l+1)*(b.l+1);let p=g;note(T[b.l].n+"を日本に吸収");if(conn){if(b.l===7)p+=20;if(b.l===9)p+=30;if(conn.open)conn.send({t:"atk",l:b.l})}ab[b.l]++;sfx("absorb",b.l);if(!conn&&b.l>=6){const bn=b.l-4;tl=Math.min(90,tl+bn);fx.push({x:b.x,y:b.y-30,s:"+"+bn+"秒",t:1.2})}if(conn&&fvt>0)p*=2;power+=p;fx.push({x:b.x,y:b.y,s:"+"+p,t:1.2});balls.splice(balls.indexOf(b),1);ui()}
 function hitM(e){const r=cv.getBoundingClientRect(),cx=(e.clientX-r.left)/r.width*W,cy=(e.clientY-r.top)/r.height*H;let hb=null,bd=9;for(const b of balls){if(!b.m)continue;const d=Math.hypot(b.x-cx,b.y-cy)/T[b.l].r;if(d<1&&d<bd){bd=d;hb=b}}return hb}
 const EV=[
 ["中国","妨害","小さな都市が2個降ってきた",()=>{for(let i=0;i<2;i++)balls.push({x:40+Math.random()*(W-80),y:30,vx:0,vy:0,l:0,age:0,t:0})}],
@@ -102,8 +120,8 @@ function hit(l){sfx("hit",l);
 }
 const mc=$("mc"),mx=mc.getContext("2d");mc.width=W;mc.height=H;
 function mini(){const cs=getComputedStyle(document.documentElement);mx.clearRect(0,0,W,H);mx.fillStyle=cs.getPropertyValue("--box");mx.fillRect(0,0,W,H);mx.setLineDash([12,12]);mx.strokeStyle=cs.getPropertyValue("--line");mx.lineWidth=4;mx.beginPath();mx.moveTo(0,LINE);mx.lineTo(W,LINE);mx.stroke();mx.setLineDash([]);for(const q of ob){const t=q[3]?SU:T[q[2]];mx.fillStyle=t.c;mx.beginPath();mx.arc(q[0],q[1],t.r,0,7);mx.fill();mx.lineWidth=3;mx.strokeStyle="rgba(0,0,0,.35)";mx.stroke()}}
-function go(){if(rdy&&opRdy)reset()}
-function recv(m){if(m.t==="rdy"){opRdy=true;go();return}if(m.t==="leave"){if(!over){res="勝ち(相手が退出)";over=true}gone=true;return}if(over)return;if(m.t==="atk")hit(m.l);else if(m.t==="pw"){opp=m.p;ui()}else if(m.t==="bd"){ob=m.b}else if(m.t==="fin"){res="負け";over=true}else if(m.t==="over"){res="勝ち";over=true}}
+function go(){if(rdy&&opRdy)startVs()}
+function recv(m){if(m.t==="rdy"){opRdy=true;go();return}if(m.t==="leave"){if(!over){res="勝ち(相手が退出)";over=true}gone=true;return}if(over)return;if(m.t==="atk")hit(m.l);else if(m.t==="pw"){opp=m.p;ui()}else if(m.t==="bd"){ob=m.b}else if(m.t==="fev"){note("相手がフィーバー!");sfx("bad")}else if(m.t==="fin"){res="負け";over=true}else if(m.t==="over"){res="勝ち";over=true}}
 function setup(k){conn=k;document.body.classList.add("vs");$("mw").hidden=false;$("rs").hidden=true;$("lv").hidden=false;k.on("data",recv);k.on("close",()=>{if(!over){res="勝ち(相手が退出)";over=true}gone=true})}
 function rmTop(){if(!balls.length)return;let m=balls[0];for(const b of balls)if(b.y<m.y)m=b;balls.splice(balls.indexOf(m),1)}
 function fireEvent(){const h=!conn&&Math.random()<.55;const pool=EV.filter(e=>(e[1]==="妨害")===h);const e=pool[Math.floor(Math.random()*pool.length)];if(e[1]==="妨害"&&shield>0){shield--;note("アメリカの支援で"+e[0]+"の妨害を防いだ");return}e[3]();note(e[0]+"の"+e[1]+": "+e[2]);sfx(e[1]==="妨害"?"bad":"good")}
@@ -128,7 +146,7 @@ function step(dt){
  }
  if(mg.length){
   for(const [a,b] of mg){
-   if(a.l<9){balls.push({x:(a.x+b.x)/2,y:(a.y+b.y)/2,vx:(a.vx+b.vx)/2,vy:(a.vy+b.vy)/2,l:a.l+1,age:2,t:0,m:true});sfx("merge",a.l+1)}
+   if(a.l<9){balls.push({x:(a.x+b.x)/2,y:(a.y+b.y)/2,vx:(a.vx+b.vx)/2,vy:(a.vy+b.vy)/2,l:a.l+1,age:2,t:0,m:true});sfx("merge",a.l+1)}else{fvt=10;note(conn?"フィーバー! 10秒間 国力2倍":"フィーバー! 10秒間 時間が止まる");sfx("win");if(conn&&conn.open)conn.send({t:"fev"})}
    
   }
   balls=balls.filter(b=>!b.dead);
@@ -174,18 +192,18 @@ $("ch").innerHTML=T.map(t=>'<span style="background:'+t.c+';color:'+t.tc+'">'+t.
 $("tg").addEventListener("click",()=>{$("ch").hidden=!$("ch").hidden});
 let last=performance.now();
 function loop(n){
- const dt=Math.min((n-last)/1000,1/30);last=n;const pausing=pre>0;if(pausing){pre-=dt;const q=Math.floor(Math.max(pre,0));if(q!==cdq){cdq=q;sfx(q>=1?"beep":"go")}}
+ const dt=Math.min((n-last)/1000,1/30);last=n;const nh=!over&&pre<=0&&!fever&&(conn?Math.max(power,opp)>=800:tl<=10);if(nh&&!hype)note(conn?"勝負どころ! BGM加速":"ラスト10秒!");hype=nh;fever=!over&&fvt>0;rate+=((hype?1.3:1)-rate)*Math.min(1,dt*3);const pausing=pre>0;if(pausing){pre-=dt;const q=Math.floor(Math.max(pre,0));if(q!==cdq){cdq=q;sfx(q>=1?"beep":"go")}if(pre<=0)bgmGo()}
  if(!over&&!pausing){
-  cool-=dt;evt-=dt;msgT-=dt;lock-=dt;bt-=dt;if(!conn){tl-=dt;if(tl<=0){tl=0;over=true;res="タイムアップ"}}if(conn&&conn.open&&bt<=0){bt=.2;conn.send({t:"bd",b:balls.map(b=>[Math.round(b.x),Math.round(b.y),b.l,b.s?1:0])})}if(evt<=0){evt=35+Math.random()*20;if(!conn)fireEvent()}for(const f of fx){f.t-=dt;f.y-=30*dt}fx=fx.filter(f=>f.t>0);if(pun){pun.t-=dt;if(pun.t<=0)pun=null}
+  cool-=dt;evt-=dt;msgT-=dt;lock-=dt;bt-=dt;if(!conn){if(fvt>0)fvt-=dt;else tl-=dt;if(tl<=0){tl=0;over=true;res="タイムアップ"}}else if(fvt>0)fvt-=dt;if(conn&&conn.open&&bt<=0){bt=.2;conn.send({t:"bd",b:balls.map(b=>[Math.round(b.x),Math.round(b.y),b.l,b.s?1:0])})}if(evt<=0){evt=35+Math.random()*20;if(!conn)fireEvent()}for(const f of fx){f.t-=dt;f.y-=30*dt}fx=fx.filter(f=>f.t>0);if(pun){pun.t-=dt;if(pun.t<=0)pun=null}
   for(let i=0;i<6;i++)step(dt/6);
   for(const b of balls){
    if(b.age>1&&b.y-T[b.l].r<LINE)b.t+=dt;else b.t=0;
    if(b.t>2&&!over){over=true;if(conn){res="負け";conn.send({t:"over"})}}
   }
  }
- {const s=Math.ceil(tl);$("tm").textContent=conn?"":"残り "+Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}if(over){if(!shown){shown=true;$("end").hidden=false;sfx(res&&res[0]==="勝"?"win":"over");bgv(.2)}endUi()}draw();if(conn)mini();requestAnimationFrame(loop);
+ {const s=Math.ceil(tl);$("tm").textContent=fvt>0?"🔥フィーバー! "+Math.ceil(fvt)+"秒"+(conn?" 国力2倍":""):conn?"":"残り "+Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}if(over){if(!shown){shown=true;$("end").hidden=false;sfx(res&&res[0]==="勝"?"win":"over");bgv(.2)}endUi()}draw();if(conn)mini();requestAnimationFrame(loop);
 }
-let AC=null,MG=null,BG=null,mute=false,bgmT=null,bgmEl=null,bgmOn=false;
+let AC=null,MG=null,BG=null,mute=false,bgmT=null,bgmEl=null,bgmOn=false,bgmPl=false;
 function au(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)();MG=AC.createGain();MG.gain.value=mute?0:1;MG.connect(AC.destination);BG=AC.createGain();BG.gain.value=.6;BG.connect(MG)}catch(e){AC=null}}if(AC&&AC.state==="suspended")AC.resume();return AC}
 function tone(f,d,type,v,t0,glide,dst){const a=au();if(!a)return;const t=t0||a.currentTime,o=a.createOscillator(),g=a.createGain();o.type=type||"sine";o.frequency.setValueAtTime(f,t);if(glide)o.frequency.exponentialRampToValueAtTime(glide,t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v||.15,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(dst||MG);o.start(t);o.stop(t+d+.05)}
 function nz(d,v,fc){const a=au();if(!a)return;const n=a.sampleRate*d|0,b=a.createBuffer(1,n,a.sampleRate),c=b.getChannelData(0);for(let i=0;i<n;i++)c[i]=Math.random()*2-1;const s=a.createBufferSource(),g=a.createGain(),f=a.createBiquadFilter();f.type="lowpass";f.frequency.value=fc;s.buffer=b;g.gain.setValueAtTime(v,a.currentTime);g.gain.exponentialRampToValueAtTime(.0001,a.currentTime+d);s.connect(f);f.connect(g);g.connect(MG);s.start()}
@@ -205,15 +223,27 @@ const SA=[67,1,67,.75,65,.25,63,.5,65,.5,67,.5,68,.5,70,.75,70,.25,70,.5,70,.5,7
 const SB=[58,.75,58,.25,63,2.5,58,.5,63,.75,65,.25,67,3,67,.75,67,.25,70,2.5,67,.5,65,.75,63,.25,65,3,58,.75,58,.25,60,2.5,58,.5,63,.75,65,.25,67,3,70,.75,67,.25,63,2.5,67,.5,65,.75,63,.25,63,3,70,.75,70,.25,72,2.5,70,.5,67,.75,63,.25,65,2.5,70,.5,67,.75,63,.25,58,2.5,58,.5,60,.75,62,.25,63,3,70,.75,70,.25,72,2.5,70,.5,67,.75,63,.25,65,2.5,70,.5,67,.75,63,.25,58,2.5,58,.5,67,.75,65,.25,63,3,0,1];
 const CH=[[3,7,10],[8,0,3],[10,2,5]],CR=[51,56,58];
 const mf=m=>440*Math.pow(2,(m-69)/12);
-function mk(arr,bl,bpm){const mel=[];let t=0;for(let i=0;i<arr.length;i+=2){if(arr[i])mel.push([t,arr[i],arr[i+1]]);t+=arr[i+1]}const tot=t,s=60/bpm,ev=[];
- for(const [t0,m,b] of mel)ev.push([t0*s,m,b*s*.92,0]);
- for(let b0=0;b0<tot;b0+=bl){const sc=[0,0,0];for(const [t0,m,b] of mel){const ov=Math.min(b0+bl,t0+b)-Math.max(b0,t0);if(ov>0)for(let c=0;c<3;c++)if(CH[c].includes(m%12))sc[c]+=ov}const r=CR[sc.indexOf(Math.max(...sc))];for(let k=0;k<bl;k++)ev.push([(b0+k)*s,r+(k%2?7:0),s*.9,1])}
+function mk(arr,bl,bpm,tr,fv){tr=tr||0;const mel=[];let t=0;for(let i=0;i<arr.length;i+=2){if(arr[i])mel.push([t,arr[i],arr[i+1]]);t+=arr[i+1]}const tot=t,s=60/bpm,ev=[];
+ for(const [t0,m,b] of mel)ev.push([t0*s,m+tr,b*s*.92,0]);
+ for(let b0=0;b0<tot;b0+=bl){const sc=[0,0,0];for(const [t0,m,b] of mel){const ov=Math.min(b0+bl,t0+b)-Math.max(b0,t0);if(ov>0)for(let c=0;c<3;c++)if(CH[c].includes(m%12))sc[c]+=ov}const r=CR[sc.indexOf(Math.max(...sc))]+tr;for(let k=0;k<bl;k++){ev.push([(b0+k)*s,r+(k%2?7:0),s*.9,1]);if(fv){ev.push([(b0+k+.5)*s,r+(k%2?7:0)+12,s*.4,1]);ev.push([(b0+k)*s,0,0,2]);ev.push([(b0+k+.5)*s,0,0,2])}}}
  return{ev,len:tot*s}}
-function gen(){const a=au();if(!a||bgmT)return;const A=mk(SA,2,96),B=mk(SB,4,76),TL=[];[[A,0],[B,A.len],[A,A.len+B.len]].forEach(([s,o])=>s.ev.forEach(e=>TL.push([e[0]+o,e[1],e[2],e[3]])));TL.sort((x,y)=>x[0]-y[0]);const T=2*A.len+B.len;let ix=0,base=a.currentTime+.2;bgmT=setInterval(()=>{while(base+TL[ix][0]<a.currentTime+.5){const e=TL[ix],t=base+e[0];if(e[3])tone(mf(e[1]),e[2],"triangle",.1,t,0,BG);else{tone(mf(e[1]),e[2],"square",.05,t,0,BG);tone(mf(e[1]),e[2],"triangle",.08,t,0,BG)}ix++;if(ix>=TL.length){ix=0;base+=T}}},100)}
-function bgmStart(){if(bgmOn)return;bgmOn=true;au();const el=new Audio("bgm.mp3");el.loop=true;el.volume=.5;el.muted=mute;bgmEl=el;el.onerror=()=>{if(bgmEl===el){bgmEl=null;gen()}};el.play().catch(()=>{})}
+function gen(){const a=au();if(!a||bgmT)return;const A=mk(SA,2,96),B=mk(SB,4,76),TL=[];[[A,0],[B,A.len],[A,A.len+B.len]].forEach(([s,o])=>s.ev.forEach(e=>TL.push([e[0]+o,e[1],e[2],e[3]])));TL.sort((x,y)=>x[0]-y[0]);const T=2*A.len+B.len;
+ const F=mk(SA,2,132,2,1),FT=F.ev.sort((x,y)=>x[0]-y[0]);
+ const N={L:TL,T:T,ix:0,off:0,sp:0},V={L:FT,T:F.len,ix:0,off:0,sp:0};let rt=a.currentTime+.2,cur=N;
+ bgmT=setInterval(()=>{const n=a.currentTime;if(n<rt)return;const S=fever?V:N;if(S!==cur){cur=S;if(S===V){V.ix=0;V.off=0;V.sp=0}}
+  S.sp+=(n-rt)*rate;rt=n;
+  while(S.off+S.L[S.ix][0]<S.sp+.5*rate){const e=S.L[S.ix],t=n+(S.off+e[0]-S.sp)/rate,d=e[2]/rate,x=S===V;
+   if(e[3]===2)tone(7000,.03,"square",.02,t,0,BG);
+   else if(e[3]===1){tone(mf(e[1]),d,"triangle",x?.14:.1,t,0,BG);if(hype&&!x){tone(mf(e[1]+12),d*.45,"triangle",.07,t+d*.555,0,BG);tone(7000,.03,"square",.015,t,0,BG)}}
+   else{tone(mf(e[1]),d,"square",x?.07:.05,t,0,BG);tone(mf(e[1]),d,"triangle",.08,t,0,BG);if(hype||x)tone(mf(e[1]+12),d,"square",.035,t,0,BG)}
+   S.ix++;if(S.ix>=S.L.length){S.ix=0;S.off+=S.T}}},50)}
+function bgmStart(){if(bgmOn)return;bgmOn=true;au();const el=new Audio("bgm.mp3");el.loop=true;el.volume=.5;el.muted=mute;bgmEl=el;el.onerror=()=>{if(bgmEl===el){bgmEl=null;if(bgmPl)gen()}};el.play().then(()=>{if(!bgmPl){el.pause();el.currentTime=0}}).catch(()=>{})}
+function bgmGo(){if(!bgmOn||bgmPl)return;bgmPl=true;if(bgmEl){bgmEl.currentTime=0;bgmEl.play().catch(()=>{})}else gen()}
+function bgmStop(){bgmPl=false;if(bgmT){clearInterval(bgmT);bgmT=null}if(bgmEl)bgmEl.pause()}
 function bgv(v){if(BG)BG.gain.value=v;if(bgmEl)bgmEl.volume=v*.8}
 $("mu").onclick=()=>{mute=!mute;if(MG)MG.gain.value=mute?0:1;if(bgmEl)bgmEl.muted=mute;$("mu").textContent=mute?"🔇":"🔊"};
-function startSolo(){cdq=-1;reset();pre=5.99}
+function startSolo(){bgmStop();cdq=-1;reset();pre=5.99}
+function startVs(){bgmStop();cdq=-1;reset();pre=5.99}
 function endUi(){
  const top=ab.reduce((m,c,i)=>c?i:m,-1),k=ab.reduce((s,c)=>s+c,0);
  $("e1").textContent=res||"ゲームオーバー";
@@ -243,10 +273,18 @@ $("eb").onclick=()=>{if(conn){if(gone||!conn.open){location.reload();return}if(!
 $("es").onclick=save;
 $("ex").onclick=()=>{if(conn&&conn.open)conn.send({t:"leave"});location.reload()};
 $("imgw").onclick=()=>{$("imgw").hidden=true};
+const TS=[["落として合体","画面をスライドして位置を決め、指を離すと落ちます。\n同じ都市がぶつかると、次の都市に合体します。"],["吸収で国力アップ","合体してできた都市には、金色の輪がつきます。\nダブルタップすると日本に吸収されて、国力が増えます。\n増える量は都市のレベルの2乗です(夕張は1、東京は100)。\n吸収した都市は、盤面から消えます。"],["ひとりで遊ぶ","制限時間は1分。時間内にどれだけ国力を伸ばせるかを競います。\n名古屋・大阪・横浜・東京(福岡より上)を吸収すると、残り時間が+2〜+5秒増えます。\n赤い点線より上に2秒以上はみ出すと、終わりです。"],["2人で対戦","先に国力1000に届くか、相手がゲームオーバーになると勝ちです。\n吸収すると、相手に妨害が飛びます。\n夕張〜福岡: パンチ(相手の国力-2)\n名古屋: 10秒間、相手は吸収できない\n大阪: 相手の国力-20(自分は+20)\n横浜: 相手にしゅうまいが4つ降る\n東京: 相手の盤面が揺れて、国力-30(自分は+30)"],["フィーバー","東京を2つ合体させると、2つとも消えて10秒間のフィーバーになります。\nひとりでは残り時間が止まり、2人対戦では吸収の国力が2倍になります。\nBGMもにぎやかな曲に変わります。"]];
+let ti=0;
+function tshow(){const s=TS[ti];$("th").textContent=s[0];$("tb").textContent=s[1];$("tc").hidden=ti!==0;$("td").textContent=TS.map((_,i)=>i===ti?"●":"○").join(" ");$("tp").style.visibility=ti?"visible":"hidden";$("tn").textContent=ti<TS.length-1?"次へ":"はじめる"}
+function topen(){ti=0;tshow();$("tut").hidden=false}
+function tclose(){$("tut").hidden=true;try{localStorage.setItem("sg_tut","1")}catch(e){}}
+$("b4").onclick=topen;$("tp").onclick=()=>{ti=Math.max(0,ti-1);tshow()};$("tn").onclick=()=>{if(ti<TS.length-1){ti++;tshow()}else tclose()};$("tx").onclick=tclose;
+$("tc").innerHTML=T.map(t=>'<span style="background:'+t.c+';color:'+t.tc+'">'+t.n+'</span>').join("→");
+$("title").onclick=()=>{au();$("title").hidden=true;topen()};
 $("lv").onclick=()=>{if(over||confirm("退出すると負けになります。退出しますか?")){if(conn&&conn.open)conn.send({t:"leave"});location.reload()}};
 addEventListener("pagehide",()=>{if(conn&&conn.open&&!over)conn.send({t:"leave"})});
 $("b1").onclick=()=>{bgmStart();$("lobby").hidden=true;startSolo()};
-$("b2").onclick=()=>{bgmStart();if(!window.Peer){$("st").textContent="通信ライブラリを読み込めません\nGitHub上のページで使えます";return}const c=Math.random().toString(36).slice(2,6);peer=new Peer("jpcg-"+c);$("st").textContent="部屋コード: "+c+"\n相手の参加を待っています";peer.on("connection",k=>{k.on("open",()=>{setup(k);$("lobby").hidden=true;reset()})});peer.on("error",e=>{$("st").textContent="エラー: "+e.type})};
-$("b3").onclick=()=>{bgmStart();if(!window.Peer){$("st").textContent="通信ライブラリを読み込めません\nGitHub上のページで使えます";return}const c=$("cd").value.trim().toLowerCase();if(!c)return;peer=new Peer();$("st").textContent="接続中...";peer.on("open",()=>{const k=peer.connect("jpcg-"+c);k.on("open",()=>{setup(k);$("lobby").hidden=true;reset()});setTimeout(()=>{if(!conn)$("st").textContent="つながりません。コードを確認してください"},8000)});peer.on("error",e=>{$("st").textContent="エラー: "+e.type})};
+$("b2").onclick=()=>{bgmStart();if(!window.Peer){$("st").textContent="通信ライブラリを読み込めません\nGitHub上のページで使えます";return}const c=Math.random().toString(36).slice(2,6);peer=new Peer("jpcg-"+c);$("st").textContent="部屋コード: "+c+"\n相手の参加を待っています";peer.on("connection",k=>{k.on("open",()=>{setup(k);$("lobby").hidden=true;startVs()})});peer.on("error",e=>{$("st").textContent="エラー: "+e.type})};
+$("b3").onclick=()=>{bgmStart();if(!window.Peer){$("st").textContent="通信ライブラリを読み込めません\nGitHub上のページで使えます";return}const c=$("cd").value.trim().toLowerCase();if(!c)return;peer=new Peer();$("st").textContent="接続中...";peer.on("open",()=>{const k=peer.connect("jpcg-"+c);k.on("open",()=>{setup(k);$("lobby").hidden=true;startVs()});setTimeout(()=>{if(!conn)$("st").textContent="つながりません。コードを確認してください"},8000)});peer.on("error",e=>{$("st").textContent="エラー: "+e.type})};
 reset();requestAnimationFrame(loop);
 </script></body></html>
