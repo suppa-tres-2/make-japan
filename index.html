@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ja"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>日本の都市合体ゲーム</title>
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
@@ -8,6 +8,8 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1812;--fg:#f3e8d6;--box:#2a2318;--line:#ff6b81;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#1d1812;--fg:#f3e8d6;--box:#2a2318;--line:#ff6b81;color-scheme:dark}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input{-webkit-user-select:text;user-select:text}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Hiragino Sans",sans-serif;display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px}
 #hd{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;font-weight:700}
 #hd small{display:block;font-weight:400;opacity:.7;font-size:11px}
@@ -289,6 +291,8 @@ function topen(){ti=0;tshow();$("tut").hidden=false}
 function tclose(){$("tut").hidden=true;try{localStorage.setItem("sg_tut","1")}catch(e){}}
 $("b4").onclick=topen;$("tp").onclick=()=>{ti=Math.max(0,ti-1);tshow()};$("tn").onclick=()=>{if(ti<TS.length-1){ti++;tshow()}else tclose()};$("tx").onclick=tclose;
 $("tc").innerHTML=T.map(t=>'<span style="background:'+t.c+';color:'+t.tc+'">'+t.n+'</span>').join("→");
+let lt0=0;document.addEventListener("touchend",e=>{const n=Date.now();if(n-lt0<350&&e.target.tagName!=="INPUT")e.preventDefault();lt0=n},{passive:false});
+["gesturestart","gesturechange","dblclick"].forEach(t=>document.addEventListener(t,e=>e.preventDefault()));
 $("title").onclick=()=>{au();$("title").hidden=true;topen()};
 $("lv").onclick=()=>{if(over||confirm("退出すると負けになります。退出しますか?")){if(conn&&conn.open)conn.send({t:"leave"});location.reload()}};
 addEventListener("pagehide",()=>{if(conn&&conn.open&&!over)conn.send({t:"leave"})});
